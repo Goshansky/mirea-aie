@@ -170,12 +170,18 @@ def top_categories(
     return result
 
 
-def compute_quality_flags(summary: DatasetSummary, missing_df: pd.DataFrame) -> Dict[str, Any]:
+def compute_quality_flags(
+    summary: DatasetSummary,
+    missing_df: pd.DataFrame,
+    df: Optional[pd.DataFrame] = None,
+) -> Dict[str, Any]:
     """
     Простейшие эвристики «качества» данных:
     - слишком много пропусков;
     - подозрительно мало строк;
-    и т.п.
+    - константные колонки;
+    - высокая кардинальность категориальных признаков;
+    - много нулевых значений в числовых колонках.
     """
     flags: Dict[str, Any] = {}
     flags["too_few_rows"] = summary.n_rows < 100
@@ -185,13 +191,63 @@ def compute_quality_flags(summary: DatasetSummary, missing_df: pd.DataFrame) -> 
     flags["max_missing_share"] = max_missing_share
     flags["too_many_missing"] = max_missing_share > 0.5
 
-    # Простейший «скор» качества
+    # Новая эвристика 1: константные колонки
+    has_constant = False
+    constant_columns: List[str] = []
+    if df is not None:
+        for col in summary.columns:
+            if col.unique == 1 and col.non_null > 0:
+                has_constant = True
+                constant_columns.append(col.name)
+    flags["has_constant_columns"] = has_constant
+    flags["constant_columns"] = constant_columns
+
+    # Новая эвристика 2: высокая кардинальность категориальных признаков
+    # Порог: если категориальный признак имеет > 50% уникальных значений от общего числа строк
+    has_high_cardinality = False
+    high_cardinality_columns: List[str] = []
+    if df is not None and summary.n_rows > 0:
+        for col in summary.columns:
+            if not col.is_numeric and col.unique > 0:
+                cardinality_ratio = col.unique / summary.n_rows
+                # Если уникальных значений больше 50% от числа строк - подозрительно
+                if cardinality_ratio > 0.5:
+                    has_high_cardinality = True
+                    high_cardinality_columns.append(col.name)
+    flags["has_high_cardinality_categoricals"] = has_high_cardinality
+    flags["high_cardinality_columns"] = high_cardinality_columns
+
+    # Новая эвристика 3: много нулевых значений в числовых колонках
+    has_many_zeros = False
+    zero_columns: List[str] = []
+    if df is not None:
+        for col in summary.columns:
+            if col.is_numeric and col.non_null > 0:
+                # Проверяем долю нулей в числовой колонке
+                col_data = df[col.name].dropna()
+                if len(col_data) > 0:
+                    zero_count = (col_data == 0).sum()
+                    zero_ratio = zero_count / len(col_data)
+                    # Если больше 30% значений - нули, это подозрительно
+                    if zero_ratio > 0.3:
+                        has_many_zeros = True
+                        zero_columns.append(col.name)
+    flags["has_many_zero_values"] = has_many_zeros
+    flags["zero_columns"] = zero_columns
+
+    # Обновлённый «скор» качества с учётом новых эвристик
     score = 1.0
     score -= max_missing_share  # чем больше пропусков, тем хуже
     if summary.n_rows < 100:
         score -= 0.2
     if summary.n_cols > 100:
         score -= 0.1
+    if has_constant:
+        score -= 0.1  # константные колонки снижают качество
+    if has_high_cardinality:
+        score -= 0.1  # высокая кардинальность может указывать на проблемы
+    if has_many_zeros:
+        score -= 0.05  # много нулей может быть проблемой
 
     score = max(0.0, min(1.0, score))
     flags["quality_score"] = score

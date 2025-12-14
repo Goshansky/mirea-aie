@@ -67,6 +67,9 @@ def report(
     sep: str = typer.Option(",", help="Разделитель в CSV."),
     encoding: str = typer.Option("utf-8", help="Кодировка файла."),
     max_hist_columns: int = typer.Option(6, help="Максимум числовых колонок для гистограмм."),
+    top_k_categories: int = typer.Option(5, help="Сколько top-значений выводить для категориальных признаков."),
+    title: str = typer.Option("EDA-отчёт", help="Заголовок отчёта."),
+    min_missing_share: float = typer.Option(0.1, help="Порог доли пропусков, выше которого колонка считается проблемной."),
 ) -> None:
     """
     Сгенерировать полный EDA-отчёт:
@@ -86,10 +89,10 @@ def report(
     summary_df = flatten_summary_for_print(summary)
     missing_df = missing_table(df)
     corr_df = correlation_matrix(df)
-    top_cats = top_categories(df)
+    top_cats = top_categories(df, top_k=top_k_categories)
 
     # 2. Качество в целом
-    quality_flags = compute_quality_flags(summary, missing_df)
+    quality_flags = compute_quality_flags(summary, missing_df, df)
 
     # 3. Сохраняем табличные артефакты
     summary_df.to_csv(out_root / "summary.csv", index=False)
@@ -102,7 +105,7 @@ def report(
     # 4. Markdown-отчёт
     md_path = out_root / "report.md"
     with md_path.open("w", encoding="utf-8") as f:
-        f.write(f"# EDA-отчёт\n\n")
+        f.write(f"# {title}\n\n")
         f.write(f"Исходный файл: `{Path(path).name}`\n\n")
         f.write(f"Строк: **{summary.n_rows}**, столбцов: **{summary.n_cols}**\n\n")
 
@@ -111,7 +114,19 @@ def report(
         f.write(f"- Макс. доля пропусков по колонке: **{quality_flags['max_missing_share']:.2%}**\n")
         f.write(f"- Слишком мало строк: **{quality_flags['too_few_rows']}**\n")
         f.write(f"- Слишком много колонок: **{quality_flags['too_many_columns']}**\n")
-        f.write(f"- Слишком много пропусков: **{quality_flags['too_many_missing']}**\n\n")
+        f.write(f"- Слишком много пропусков: **{quality_flags['too_many_missing']}**\n")
+        
+        # Новые эвристики
+        f.write(f"- Есть константные колонки: **{quality_flags['has_constant_columns']}**\n")
+        if quality_flags['has_constant_columns']:
+            f.write(f"  - Константные колонки: {', '.join(quality_flags['constant_columns'])}\n")
+        f.write(f"- Высокая кардинальность категориальных признаков: **{quality_flags['has_high_cardinality_categoricals']}**\n")
+        if quality_flags['has_high_cardinality_categoricals']:
+            f.write(f"  - Колонки с высокой кардинальностью: {', '.join(quality_flags['high_cardinality_columns'])}\n")
+        f.write(f"- Много нулевых значений в числовых колонках: **{quality_flags['has_many_zero_values']}**\n")
+        if quality_flags['has_many_zero_values']:
+            f.write(f"  - Колонки с большим количеством нулей: {', '.join(quality_flags['zero_columns'])}\n")
+        f.write(f"\n- Порог проблемных пропусков: **{min_missing_share:.1%}**\n\n")
 
         f.write("## Колонки\n\n")
         f.write("См. файл `summary.csv`.\n\n")
@@ -121,6 +136,13 @@ def report(
             f.write("Пропусков нет или датасет пуст.\n\n")
         else:
             f.write("См. файлы `missing.csv` и `missing_matrix.png`.\n\n")
+            # Список проблемных колонок с пропусками выше порога
+            problematic_missing = missing_df[missing_df["missing_share"] >= min_missing_share]
+            if not problematic_missing.empty:
+                f.write(f"### Проблемные колонки (пропусков ≥ {min_missing_share:.1%})\n\n")
+                for col_name, row in problematic_missing.iterrows():
+                    f.write(f"- `{col_name}`: {row['missing_share']:.1%} пропусков ({int(row['missing_count'])} из {summary.n_rows})\n")
+                f.write("\n")
 
         f.write("## Корреляция числовых признаков\n\n")
         if corr_df.empty:
@@ -132,7 +154,7 @@ def report(
         if not top_cats:
             f.write("Категориальные/строковые признаки не найдены.\n\n")
         else:
-            f.write("См. файлы в папке `top_categories/`.\n\n")
+            f.write(f"См. файлы в папке `top_categories/` (топ-{top_k_categories} значений по каждой колонке).\n\n")
 
         f.write("## Гистограммы числовых колонок\n\n")
         f.write("См. файлы `hist_*.png`.\n")
