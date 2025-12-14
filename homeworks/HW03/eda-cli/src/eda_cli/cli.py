@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import pandas as pd
 import typer
@@ -38,6 +39,68 @@ def _load_csv(
         raise typer.BadParameter(f"Не удалось прочитать CSV: {exc}") from exc
 
 
+def _create_json_summary(
+    summary: DatasetSummary,
+    quality_flags: Dict[str, Any],
+    missing_df: pd.DataFrame,
+    min_missing_share: float,
+) -> Dict[str, Any]:
+    """
+    Создаёт компактную JSON-сводку по датасету.
+    """
+    # Собираем проблемные колонки
+    problematic_columns = []
+    
+    # Колонки с пропусками выше порога
+    if not missing_df.empty:
+        problematic_missing = missing_df[missing_df["missing_share"] >= min_missing_share]
+        for col_name in problematic_missing.index:
+            problematic_columns.append({
+                "name": col_name,
+                "issue": "high_missing_share",
+                "missing_share": float(missing_df.loc[col_name, "missing_share"]),
+            })
+    
+    # Константные колонки
+    if quality_flags.get("has_constant_columns", False):
+        for col_name in quality_flags.get("constant_columns", []):
+            problematic_columns.append({
+                "name": col_name,
+                "issue": "constant_column",
+            })
+    
+    # Колонки с высокой кардинальностью
+    if quality_flags.get("has_high_cardinality_categoricals", False):
+        for col_name in quality_flags.get("high_cardinality_columns", []):
+            problematic_columns.append({
+                "name": col_name,
+                "issue": "high_cardinality",
+            })
+    
+    # Колонки с большим количеством нулей
+    if quality_flags.get("has_many_zero_values", False):
+        for col_name in quality_flags.get("zero_columns", []):
+            problematic_columns.append({
+                "name": col_name,
+                "issue": "many_zero_values",
+            })
+    
+    return {
+        "n_rows": summary.n_rows,
+        "n_cols": summary.n_cols,
+        "quality_score": float(quality_flags.get("quality_score", 0.0)),
+        "problematic_columns": problematic_columns,
+        "quality_flags": {
+            "too_few_rows": quality_flags.get("too_few_rows", False),
+            "too_many_columns": quality_flags.get("too_many_columns", False),
+            "too_many_missing": quality_flags.get("too_many_missing", False),
+            "has_constant_columns": quality_flags.get("has_constant_columns", False),
+            "has_high_cardinality_categoricals": quality_flags.get("has_high_cardinality_categoricals", False),
+            "has_many_zero_values": quality_flags.get("has_many_zero_values", False),
+        },
+    }
+
+
 @app.command()
 def overview(
     path: str = typer.Argument(..., help="Путь к CSV-файлу."),
@@ -70,6 +133,7 @@ def report(
     top_k_categories: int = typer.Option(5, help="Сколько top-значений выводить для категориальных признаков."),
     title: str = typer.Option("EDA-отчёт", help="Заголовок отчёта."),
     min_missing_share: float = typer.Option(0.1, help="Порог доли пропусков, выше которого колонка считается проблемной."),
+    json_summary: bool = typer.Option(False, "--json-summary", help="Сохранить компактную JSON-сводку по датасету."),
 ) -> None:
     """
     Сгенерировать полный EDA-отчёт:
@@ -157,9 +221,21 @@ def report(
             f.write(f"См. файлы в папке `top_categories/` (топ-{top_k_categories} значений по каждой колонке).\n\n")
 
         f.write("## Гистограммы числовых колонок\n\n")
-        f.write("См. файлы `hist_*.png`.\n")
+        f.write("См. файлы `hist_*.png`.\n\n")
+        
+        if json_summary:
+            f.write("## JSON-сводка\n\n")
+            f.write("Компактная сводка по датасету сохранена в файл `summary.json`.\n")
 
-    # 5. Картинки
+    # 5. JSON-сводка (если запрошена)
+    if json_summary:
+        json_summary_data = _create_json_summary(summary, quality_flags, missing_df, min_missing_share)
+        json_path = out_root / "summary.json"
+        with json_path.open("w", encoding="utf-8") as f:
+            json.dump(json_summary_data, f, indent=2, ensure_ascii=False)
+        typer.echo(f"- JSON-сводка: {json_path}")
+
+    # 6. Картинки
     plot_histograms_per_column(df, out_root, max_columns=max_hist_columns)
     plot_missing_matrix(df, out_root / "missing_matrix.png")
     plot_correlation_heatmap(df, out_root / "correlation_heatmap.png")
@@ -167,6 +243,8 @@ def report(
     typer.echo(f"Отчёт сгенерирован в каталоге: {out_root}")
     typer.echo(f"- Основной markdown: {md_path}")
     typer.echo("- Табличные файлы: summary.csv, missing.csv, correlation.csv, top_categories/*.csv")
+    if json_summary:
+        typer.echo("- JSON-сводка: summary.json")
     typer.echo("- Графики: hist_*.png, missing_matrix.png, correlation_heatmap.png")
 
 

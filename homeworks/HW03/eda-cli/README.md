@@ -45,12 +45,13 @@ uv run eda-cli report data/example.csv --out-dir reports
 
 - `--top-k-categories` (по умолчанию: 5) – сколько top-значений выводить для категориальных признаков;
 - `--title` (по умолчанию: "EDA-отчёт") – заголовок отчёта в Markdown;
-- `--min-missing-share` (по умолчанию: 0.1) – порог доли пропусков (0.0-1.0), выше которого колонка считается проблемной и попадает в отдельный список в отчёте.
+- `--min-missing-share` (по умолчанию: 0.1) – порог доли пропусков (0.0-1.0), выше которого колонка считается проблемной и попадает в отдельный список в отчёте;
+- `--json-summary` – сохранить компактную JSON-сводку по датасету в файл `summary.json` (размеры датасета, `quality_score`, список проблемных колонок).
 
 **Пример с новыми параметрами:**
 
 ```bash
-uv run eda-cli report data/example.csv --out-dir reports --top-k-categories 10 --title "Анализ данных" --min-missing-share 0.2
+uv run eda-cli report data/example.csv --out-dir reports --top-k-categories 10 --title "Анализ данных" --min-missing-share 0.2 --json-summary
 ```
 
 В результате в каталоге `reports/` появятся:
@@ -60,6 +61,7 @@ uv run eda-cli report data/example.csv --out-dir reports --top-k-categories 10 -
 - `missing.csv` – пропуски по колонкам;
 - `correlation.csv` – корреляционная матрица (если есть числовые признаки);
 - `top_categories/*.csv` – top-k категорий по строковым признакам (количество определяется параметром `--top-k-categories`);
+- `summary.json` – компактная JSON-сводка (только при использовании `--json-summary`);
 - `hist_*.png` – гистограммы числовых колонок;
 - `missing_matrix.png` – визуализация пропусков;
 - `correlation_heatmap.png` – тепловая карта корреляций.
