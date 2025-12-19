@@ -247,6 +247,50 @@ curl -X POST "http://127.0.0.1:8000/quality-from-csv" \
 
 ---
 
+### 5. `POST /quality-flags-from-csv` – полный набор флагов качества по CSV-файлу
+
+Эндпоинт принимает CSV-файл и возвращает **полный набор флагов качества**, включая дополнительные эвристики из HW03.
+
+**Запрос:**
+
+```http
+POST /quality-flags-from-csv
+Content-Type: multipart/form-data
+file: <CSV-файл>
+```
+
+**Пример ответа `200 OK`:**
+
+```json
+{
+  "flags": {
+    "too_few_rows": false,
+    "too_many_columns": false,
+    "too_many_missing": false,
+    "has_constant_columns": false,
+    "has_high_cardinality_categoricals": true,
+    "has_many_zero_values": false
+  }
+}
+```
+
+Флаги включают:
+
+- **Базовые флаги**: `too_few_rows`, `too_many_columns`, `too_many_missing`
+- **Дополнительные эвристики из HW03**:
+  - `has_constant_columns` - есть ли колонки, где все значения одинаковые
+  - `has_high_cardinality_categoricals` - есть ли категориальные признаки с очень большим числом уникальных значений (>50% от числа строк)
+  - `has_many_zero_values` - есть ли числовые колонки с большой долей нулевых значений (>30%)
+
+**Пример вызова через `curl`:**
+
+```bash
+curl -X POST "http://127.0.0.1:8000/quality-flags-from-csv" \
+  -F "file=@data/example.csv"
+```
+
+---
+
 ## Структура проекта (упрощённо)
 
 ```text

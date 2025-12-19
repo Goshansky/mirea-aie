@@ -44,8 +44,12 @@ def test_missing_table_and_quality_flags():
     assert missing_df.loc["age", "missing_count"] == 1
 
     summary = summarize_dataset(df)
-    flags = compute_quality_flags(summary, missing_df)
+    flags = compute_quality_flags(summary, missing_df, df=df)
     assert 0.0 <= flags["quality_score"] <= 1.0
+    # Проверяем наличие новых флагов из HW03
+    assert "has_constant_columns" in flags
+    assert "has_high_cardinality_categoricals" in flags
+    assert "has_many_zero_values" in flags
 
 
 def test_correlation_and_top_categories():

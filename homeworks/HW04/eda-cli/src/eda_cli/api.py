@@ -78,6 +78,15 @@ class QualityResponse(BaseModel):
     )
 
 
+class QualityFlagsResponse(BaseModel):
+    """Ответ с полным набором флагов качества датасета."""
+
+    flags: dict[str, bool] = Field(
+        ...,
+        description="Полный набор булевых флагов качества данных",
+    )
+
+
 # ---------- Системный эндпоинт ----------
 
 
@@ -198,7 +207,7 @@ async def quality_from_csv(file: UploadFile = File(...)) -> QualityResponse:
     # Используем EDA-ядро из S03
     summary = summarize_dataset(df)
     missing_df = missing_table(df)
-    flags_all = compute_quality_flags(summary, missing_df)
+    flags_all = compute_quality_flags(summary, missing_df, df=df)
 
     # Ожидаем, что compute_quality_flags вернёт quality_score в [0,1]
     score = float(flags_all.get("quality_score", 0.0))
@@ -242,3 +251,55 @@ async def quality_from_csv(file: UploadFile = File(...)) -> QualityResponse:
         flags=flags_bool,
         dataset_shape={"n_rows": n_rows, "n_cols": n_cols},
     )
+
+
+# ---------- /quality-flags-from-csv: полный набор флагов качества ----------
+
+
+@app.post(
+    "/quality-flags-from-csv",
+    response_model=QualityFlagsResponse,
+    tags=["quality"],
+    summary="Полный набор флагов качества по CSV-файлу",
+)
+async def quality_flags_from_csv(file: UploadFile = File(...)) -> QualityFlagsResponse:
+    """
+    Эндпоинт, который принимает CSV-файл, запускает EDA-ядро
+    (summarize_dataset + missing_table + compute_quality_flags)
+    и возвращает полный набор флагов качества данных, включая дополнительные эвристики из HW03:
+    - has_constant_columns
+    - has_high_cardinality_categoricals
+    - has_many_zero_values
+    и другие базовые флаги.
+    """
+
+    if file.content_type not in ("text/csv", "application/vnd.ms-excel", "application/octet-stream"):
+        raise HTTPException(status_code=400, detail="Ожидается CSV-файл (content-type text/csv).")
+
+    try:
+        df = pd.read_csv(file.file)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=400, detail=f"Не удалось прочитать CSV: {exc}")
+
+    if df.empty:
+        raise HTTPException(status_code=400, detail="CSV-файл не содержит данных (пустой DataFrame).")
+
+    # Используем EDA-ядро с дополнительными эвристиками из HW03
+    summary = summarize_dataset(df)
+    missing_df = missing_table(df)
+    flags_all = compute_quality_flags(summary, missing_df, df=df)
+
+    # Оставляем только булевы флаги для компактности
+    flags_bool: dict[str, bool] = {
+        key: bool(value)
+        for key, value in flags_all.items()
+        if isinstance(value, bool)
+    }
+
+    print(
+        f"[quality-flags-from-csv] filename={file.filename!r} "
+        f"n_rows={summary.n_rows} n_cols={summary.n_cols} "
+        f"flags_count={len(flags_bool)}"
+    )
+
+    return QualityFlagsResponse(flags=flags_bool)
