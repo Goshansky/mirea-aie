@@ -1,0 +1,21 @@
+{
+  "best_model_label": "HistGradientBoosting",
+  "test_metrics": {
+    "accuracy": 0.9366666666666666,
+    "f1": 0.8987206823027718,
+    "roc_auc": 0.9742181707379005,
+    "model": "HistGradientBoosting"
+  },
+  "search_summary": {
+    "best_params": {
+      "learning_rate": 0.05,
+      "max_depth": null,
+      "max_leaf_nodes": 63
+    },
+    "best_cv_roc_auc": 0.9721417717189265
+  },
+  "random_state": 42,
+  "dataset": "S06-hw-dataset-01.csv",
+  "train_size": 9000,
+  "test_size": 3000
+}
