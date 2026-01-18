@@ -1,0 +1,32 @@
+{
+  "dataset_01": {
+    "method": "DBSCAN",
+    "params": "eps=2.0, min_samples=3",
+    "criterion": "silhouette_score",
+    "metrics": {
+      "silhouette": 0.5216395622404242,
+      "davies_bouldin": 0.6853295219054457,
+      "calinski_harabasz": 11786.954622671532
+    }
+  },
+  "dataset_02": {
+    "method": "DBSCAN",
+    "params": "eps=0.7, min_samples=3",
+    "criterion": "silhouette_score",
+    "metrics": {
+      "silhouette": 0.34554999921850155,
+      "davies_bouldin": 0.5509870790351395,
+      "calinski_harabasz": 10.405774777673175
+    }
+  },
+  "dataset_03": {
+    "method": "AgglomerativeClustering",
+    "params": "k=2, linkage=average",
+    "criterion": "silhouette_score",
+    "metrics": {
+      "silhouette": 0.42529612444453263,
+      "davies_bouldin": 0.8138020165811181,
+      "calinski_harabasz": 8.943143115556799
+    }
+  }
+}
