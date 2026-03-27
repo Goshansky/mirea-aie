@@ -1,0 +1,17 @@
+{
+  "model": "GRURegressor",
+  "input_size": 1,
+  "hidden_size": 64,
+  "num_layers": 1,
+  "dropout": 0.0,
+  "window_size": 24,
+  "horizon": 1,
+  "batch_size": 64,
+  "epochs": 40,
+  "best_epoch": 30,
+  "learning_rate": 0.001,
+  "optimizer": "Adam",
+  "seed": 42,
+  "scaler": "StandardScaler(target fit on train only)",
+  "device": "cpu"
+}
