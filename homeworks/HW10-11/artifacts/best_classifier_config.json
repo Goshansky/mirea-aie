@@ -1,0 +1,19 @@
+{
+  "seed": 42,
+  "dataset": "STL10",
+  "best_experiment_id": "C4",
+  "architecture": "ResNet18",
+  "best_val_accuracy": 0.943,
+  "test_accuracy": 0.9405,
+  "imagenet_norm_for_resnet": true,
+  "transforms_train": "ResNet: Resize256+RandomCrop224+Flip+ImageNet norm",
+  "transforms_eval": "ResNet: Resize256+CenterCrop224+ImageNet norm",
+  "hyperparams": {
+    "batch_size": 16,
+    "epochs_cnn": 15,
+    "epochs_resnet": 12,
+    "lr_cnn": 0.001,
+    "lr_head": 0.001,
+    "lr_finetune": 0.0001
+  }
+}
