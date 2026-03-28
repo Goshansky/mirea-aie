@@ -8,7 +8,7 @@
   "horizon": 1,
   "batch_size": 64,
   "epochs": 40,
-  "best_epoch": 30,
+  "best_epoch": 40,
   "learning_rate": 0.001,
   "optimizer": "Adam",
   "seed": 42,
