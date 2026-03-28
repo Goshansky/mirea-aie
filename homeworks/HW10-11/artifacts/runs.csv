@@ -1,7 +1,7 @@
 experiment_id,task,dataset,seed,model_summary,optimizer,lr,epochs_trained,best_val_accuracy,test_accuracy,precision,recall,mean_iou,notes
 C1,classification,STL10,42,SimpleCNN no-aug,Adam,0.001,15,0.562,,,,,simple-cnn-base
 C2,classification,STL10,42,SimpleCNN aug,Adam,0.001,15,0.625,,,,,simple-cnn-aug
-C3,classification,STL10,42,ResNet18 head-only,Adam,0.001,12,0.942,,,,,resnet18-head-only
-C4,classification,STL10,42,ResNet18 layer4+fc finetune,Adam,0.0001,12,0.943,0.9405,,,,resnet18-finetune
-V1,segmentation,VOC2012,42,DeepLabV3_ResNet50 COCO+VOC labels,n/a,,0,,,0.804638207114546,0.8605381816363188,0.722978728689641,argmax binary fg
-V2,segmentation,VOC2012,42,DeepLabV3_ResNet50 COCO+VOC labels,n/a,,0,,,0.7934998569897775,0.8555416627642897,0.7199429794558279,argmax + small-cc removal / morph cleanup
+C3,classification,STL10,42,ResNet18 head-only,Adam,0.001,12,0.937,,,,,resnet18-head-only
+C4,classification,STL10,42,ResNet18 layer4+fc finetune,Adam,0.0001,12,0.938,0.942125,,,,resnet18-finetune
+V1,segmentation,Pascal VOC,42,DeepLabV3_ResNet50(weights=DeepLabV3_ResNet50_Weights.DEFAULT),n/a,,0,,,0.80760148947651,0.8929127675190178,0.7522411067607319,V1: argmax over 21 DeepLab logits -> predicted_class > VOC_BACKGROUND_CLASS_ID as foreground
+V2,segmentation,Pascal VOC,42,DeepLabV3_ResNet50(weights=DeepLabV3_ResNet50_Weights.DEFAULT),n/a,,0,,,0.8086694428929473,0.8909307081991461,0.7519389908525771,V2: V1 mask -> scipy binary_opening 3x3 -> drop CC area<400; else torch morph 3x3 in postprocess_v2

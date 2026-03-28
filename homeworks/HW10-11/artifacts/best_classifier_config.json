@@ -3,17 +3,38 @@
   "dataset": "STL10",
   "best_experiment_id": "C4",
   "architecture": "ResNet18",
-  "best_val_accuracy": 0.943,
-  "test_accuracy": 0.9405,
+  "pretrained_weights": "ResNet18_Weights.IMAGENET1K_V1",
+  "loss": "CrossEntropyLoss",
+  "optimizer": "Adam",
+  "weight_decay": 0.0,
+  "best_val_accuracy": 0.938,
+  "test_accuracy": 0.942125,
+  "epochs_trained": 12,
+  "learning_rate": 0.0001,
+  "batch_size": 16,
+  "num_workers": 0,
+  "device": "cpu",
   "imagenet_norm_for_resnet": true,
-  "transforms_train": "ResNet: Resize256+RandomCrop224+Flip+ImageNet norm",
-  "transforms_eval": "ResNet: Resize256+CenterCrop224+ImageNet norm",
+  "resnet_eval_preprocessing": "RESNET18_WEIGHTS.transforms()",
+  "resnet_train_preprocessing": "RandomResizedCrop(224)+RandomHorizontalFlip+ToTensor+Normalize(meta)",
+  "transforms_train": "RandomResizedCrop+Flip+ImageNet norm (meta)",
+  "transforms_eval": "RESNET18_WEIGHTS.transforms()",
+  "fine_tune": {
+    "mode": "partial",
+    "trainable": [
+      "layer4",
+      "fc"
+    ]
+  },
   "hyperparams": {
     "batch_size": 16,
     "epochs_cnn": 15,
     "epochs_resnet": 12,
     "lr_cnn": 0.001,
     "lr_head": 0.001,
-    "lr_finetune": 0.0001
+    "lr_finetune": 0.0001,
+    "optimizer": "Adam",
+    "weight_decay": 0.0,
+    "loss": "CrossEntropyLoss"
   }
 }
