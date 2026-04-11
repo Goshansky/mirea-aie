@@ -1,0 +1,6 @@
+query,before_retrieved_sources,after_retrieved_sources,changed
+Как rolling update настроить в Kubernetes?,precommit|github_actions|reproducibility|ci_cd|git_basics,helm|precommit|k8s_basics|github_actions|reproducibility,True
+Чем Helm отличается от простого kubectl apply?,docker_intro|pytest|makefile|docker_compose|reproducibility,helm|prometheus|docker_intro|k8s_basics|pytest,True
+Где взять метрики латентности для алертов?,reproducibility|pytest|logging|git_basics|docker_intro,prometheus|reproducibility|k8s_basics|pytest|logging,True
+Как в Docker Compose поднять стек локально?,docker_intro|docker_compose|ci_cd|reproducibility|conda,docker_intro|docker_compose|k8s_basics|helm|prometheus,True
+Зачем нужен pytest-cov в CI?,pytest|ci_cd|conda|git_basics|makefile,pytest|ci_cd|k8s_basics|conda|git_basics,True

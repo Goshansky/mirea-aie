@@ -1,0 +1,11 @@
+query,expected_source,retrieved_sources,hit_at_k,recall_at_k,rank_of_first_relevant
+Как добавить удалённый репозиторий и отправить коммиты?,git_remote,git_remote|docker_compose|git_basics|docker_intro|makefile,1,1.0,1
+Где хранить API-ключи и как подключить dotenv?,secrets,secrets|docker_compose|venv|conda|gpu_docker,1,1.0,1
+Как создать conda-окружение с Python 3.11?,conda,conda|ci_cd|pytest|gpu_docker|docker_intro,1,1.0,1
+Что такое слой в Dockerfile и как кешируется сборка?,docker_intro,docker_intro|docker_compose|reproducibility|ci_cd|git_basics,1,1.0,1
+Как поднять несколько сервисов одной командой локально?,docker_compose,docker_compose|github_actions|git_remote|logging|makefile,1,1.0,1
+Что запускается при git push в CI?,ci_cd,git_basics|git_remote|ci_cd|secrets|github_actions,1,1.0,3
+Как параметризовать один тест в pytest?,pytest,pytest|ci_cd|precommit|makefile|reproducibility,1,1.0,1
+Зачем фиксировать seed и версии пакетов в ML?,reproducibility,reproducibility|conda|pytest|ci_cd|docker_compose,1,1.0,1
+Как в контейнере использовать NVIDIA GPU?,gpu_docker,gpu_docker|docker_intro|docker_compose|conda|secrets,1,1.0,1
+Какие уровни есть у модуля logging?,logging,logging|docker_compose|reproducibility|git_basics|docker_intro,1,1.0,1
