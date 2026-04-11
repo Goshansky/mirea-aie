@@ -45,7 +45,7 @@
 ## 5. Fine-tuning и оценка
 
 - Модель для fine-tuning: **`distilbert-base-uncased`**, `AutoModelForSequenceClassification`, `num_labels=6`
-- Как была организована токенизация датасета: `dataset.map` с батчевым `tokenizer(...)`, `truncation=True`, `max_length=128`, колонка **`labels`** из исходной `label`, колонки `text` удалены после map
+- Как была организована токенизация датасета: отдельный блок в `HW13.ipynb` (**«Подготовка токенизации датасета для fine-tuning»**): для `train` / `validation` / `test` — `dataset.map` с батчевым `tokenizer(...)`, `truncation=True`, `max_length=128`, колонка **`labels`**, удаление исходных колонок, `set_format` под `Trainer`, **`DataCollatorWithPadding`**
 - Максимальная длина (`max_length`): **128**
 - Batch size: **16** (train), **32** (eval)
 - Максимальное число эпох: **3**
