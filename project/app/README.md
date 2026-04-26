@@ -35,3 +35,9 @@ uvicorn app.main:app --reload --port 8000
 Интерфейс пользователя реализуется отдельно в `project/frontend/` на React и обращается к этому API.
 
 Детальные команды запуска и сценарии использования описывайте в `project/README.md`.
+
+## Как это связано с ML
+
+- Backend не обучает модель.
+- Backend читает готовые артефакты из `ml/artifacts/`.
+- После каждого переобучения (`python -m ml.training.train`) API начинает использовать новую финальную модель (`model.joblib`).

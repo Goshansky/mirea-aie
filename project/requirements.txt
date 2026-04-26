@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+pydantic
+python-dotenv
+
+numpy
+pandas
+scikit-learn
+joblib
+shap
+
+matplotlib
+seaborn
+jupyter
+
+pytest
+httpx

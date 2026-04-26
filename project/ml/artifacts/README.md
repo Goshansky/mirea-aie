@@ -8,3 +8,13 @@
 - дополнительные файлы explainability (при необходимости).
 
 Backend должен читать артефакты только из этой папки.
+
+## Что сейчас генерируется
+
+- `model.joblib` — финальная модель для API;
+- `model_baseline.joblib` — baseline (логистическая регрессия);
+- `model_advanced.joblib` — улучшенная модель (RandomForest);
+- `metrics.json` — метрики сравнения моделей;
+- `feature_metadata.json` — имена признаков и importances;
+- `x_test_sample.npy` — пример трансформированных признаков для отладки;
+- `eda/` — графики и сводки EDA.
