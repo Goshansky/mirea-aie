@@ -13,16 +13,22 @@
 Рекомендуемая структура:
 
 - `api/` — роуты и зависимости API;
-- `core/` — конфигурация, логирование, общие правила;
-- `models/` — pydantic-схемы и объекты модели;
-- `services/` — прикладные сервисы инференса и explainability;
-- `main.py` — точка входа FastAPI-приложения.
+- `core/` — конфигурация, логирование, decision rule;
+- `models/` — pydantic-схемы и типы инференса;
+- `services/` — инференс и explainability;
+- `main.py` — точка входа FastAPI-приложения и middleware логирования.
 
-Базовый запуск сервиса (после реализации модулей):
+Запуск сервиса:
 
 ```bash
 cd project
 uvicorn app.main:app --reload --port 8000
+```
+
+Проверка endpoints:
+
+```bash
+curl http://127.0.0.1:8000/health
 ```
 
 Ключевые требования к коду в `app/`:
@@ -41,3 +47,13 @@ uvicorn app.main:app --reload --port 8000
 - Backend не обучает модель.
 - Backend читает готовые артефакты из `ml/artifacts/`.
 - После каждого переобучения (`python -m ml.training.train`) API начинает использовать новую финальную модель (`model.joblib`).
+
+## Реализованные файлы
+
+- `core/config.py` — настройки через `.env` (`THRESHOLD_APPROVE`, `THRESHOLD_REJECT`, пути артефактов).
+- `core/logging.py` — базовая конфигурация логов.
+- `core/decision.py` — правило `APPROVE / REVIEW / REJECT`.
+- `api/routes/health.py` — `GET /health`.
+- `api/routes/predict.py` — `POST /predict` с обработкой ошибок.
+- `services/inference_service.py` — загрузка `model.joblib`, расчёт PD, решение.
+- `services/explanation_service.py` — SHAP + fallback по feature importance.
