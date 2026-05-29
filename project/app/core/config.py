@@ -49,6 +49,14 @@ class Settings(BaseSettings):
     age_penalty_rate: float = Field(default=0.012, alias="AGE_PENALTY_RATE")
     age_penalty_cap: float = Field(default=0.40, alias="AGE_PENALTY_CAP")
 
+    auto_approve_min_credit_history: int = Field(default=1, alias="AUTO_APPROVE_MIN_CREDIT_HISTORY")
+    auto_approve_max_credit_history: int = Field(default=20, alias="AUTO_APPROVE_MAX_CREDIT_HISTORY")
+    credit_history_reject_max: int = Field(default=50, alias="CREDIT_HISTORY_REJECT_MAX")
+    credit_history_thin_penalty: float = Field(default=0.05, alias="CREDIT_HISTORY_THIN_PENALTY")
+    credit_history_overload_start: int = Field(default=15, alias="CREDIT_HISTORY_OVERLOAD_START")
+    credit_history_penalty_rate: float = Field(default=0.005, alias="CREDIT_HISTORY_PENALTY_RATE")
+    credit_history_penalty_cap: float = Field(default=0.15, alias="CREDIT_HISTORY_PENALTY_CAP")
+
     late_payments_reject: int = Field(default=3, alias="LATE_PAYMENTS_REJECT")
     late_payment_penalty: float = Field(default=0.06, alias="LATE_PAYMENT_PENALTY")
     late_payment_penalty_cap: float = Field(default=0.30, alias="LATE_PAYMENT_PENALTY_CAP")

@@ -71,18 +71,45 @@ def debt_ratio_penalty(debt_ratio: float, settings: Settings) -> float:
     return min(settings.debt_penalty_cap, excess * settings.debt_penalty_rate)
 
 
+def credit_history_penalty(credit_history: int, settings: Settings) -> float:
+    """
+    Штраф к PD за отсутствие или избыток открытых кредитных линий.
+
+    0 линий — thin file (нет кредитной истории).
+    Много линий — перегруз параллельными обязательствами.
+    """
+    penalty = 0.0
+    if credit_history <= 0:
+        penalty += settings.credit_history_thin_penalty
+    elif credit_history > settings.credit_history_overload_start:
+        excess = credit_history - settings.credit_history_overload_start
+        penalty += excess * settings.credit_history_penalty_rate
+    return min(settings.credit_history_penalty_cap, penalty)
+
+
 def adjust_probability_for_risk_factors(
     ml_probability: float,
     payload: PredictRequest,
     settings: Settings,
 ) -> tuple[float, list[str]]:
-    """Корректирует ML-вероятность с учётом просрочек, кредита, долга и возраста."""
+    """Корректирует ML-вероятность с учётом просрочек, кредита, долга, возраста и кредитных линий."""
     loan_to_income = _loan_to_income(payload)
     adjustments: list[str] = []
 
     age_pen = age_penalty(payload.age, settings)
     if age_pen > 0:
         adjustments.append(f"возраст ({payload.age} лет): +{age_pen * 100:.0f} п.п. к риску")
+
+    credit_pen = credit_history_penalty(payload.credit_history, settings)
+    if credit_pen > 0:
+        if payload.credit_history <= 0:
+            adjustments.append(
+                f"нет кредитной истории (0 линий): +{credit_pen * 100:.0f} п.п. к риску"
+            )
+        else:
+            adjustments.append(
+                f"много открытых линий ({payload.credit_history}): +{credit_pen * 100:.0f} п.п. к риску"
+            )
 
     late_pen = late_payment_penalty(payload.late_payments, settings)
     if late_pen > 0:
@@ -102,7 +129,7 @@ def adjust_probability_for_risk_factors(
             f"высокая долговая нагрузка ({payload.debt_ratio:.2f}): +{debt_pen * 100:.0f} п.п. к риску"
         )
 
-    adjusted = min(0.99, ml_probability + age_pen + late_pen + loan_pen + debt_pen)
+    adjusted = min(0.99, ml_probability + age_pen + credit_pen + late_pen + loan_pen + debt_pen)
     return adjusted, adjustments
 
 
@@ -129,14 +156,28 @@ def apply_favorable_rules(payload: PredictRequest, settings: Settings) -> Busine
     is_acceptable_debt = payload.debt_ratio <= settings.auto_approve_max_debt_ratio
     is_acceptable_lates = payload.late_payments <= settings.auto_approve_max_late_payments
     is_acceptable_age = settings.auto_approve_min_age <= payload.age <= settings.auto_approve_max_age
+    is_acceptable_credit_history = (
+        settings.auto_approve_min_credit_history
+        <= payload.credit_history
+        <= settings.auto_approve_max_credit_history
+    )
 
-    if not (is_low_load and is_acceptable_debt and is_acceptable_lates and is_acceptable_age):
+    if not (
+        is_low_load
+        and is_acceptable_debt
+        and is_acceptable_lates
+        and is_acceptable_age
+        and is_acceptable_credit_history
+    ):
         return BusinessRuleOutcome(triggered=False)
 
     base_pd = max(0.03, loan_to_income * 0.5 + payload.debt_ratio * 0.1)
     estimated_pd = min(
         0.22,
-        base_pd + late_payment_penalty(payload.late_payments, settings) + age_penalty(payload.age, settings),
+        base_pd
+        + late_payment_penalty(payload.late_payments, settings)
+        + age_penalty(payload.age, settings)
+        + credit_history_penalty(payload.credit_history, settings),
     )
 
     reasons: list[str] = [
@@ -184,6 +225,12 @@ def apply_hard_rules(payload: PredictRequest, settings: Settings) -> BusinessRul
             f"возраст ({payload.age}) ниже допустимого предела ({settings.age_reject_min} лет)"
         )
 
+    if payload.credit_history >= settings.credit_history_reject_max:
+        reasons.append(
+            f"слишком много открытых кредитных линий ({payload.credit_history}): "
+            f"лимит — {settings.credit_history_reject_max - 1}"
+        )
+
     if payload.income < settings.min_income:
         reasons.append(
             f"доход ({payload.income:,.0f} ₽) ниже минимального порога ({settings.min_income:,.0f} ₽)"
@@ -208,6 +255,7 @@ def apply_hard_rules(payload: PredictRequest, settings: Settings) -> BusinessRul
         0.99,
         0.80
         + age_penalty(payload.age, settings)
+        + credit_history_penalty(payload.credit_history, settings)
         + late_payment_penalty(payload.late_payments, settings)
         + 0.03 * len(reasons),
     )
