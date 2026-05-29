@@ -1,0 +1,18 @@
+{
+  "feature_names": [
+    "num__income",
+    "num__loan_amount",
+    "num__age",
+    "num__credit_history",
+    "num__debt_ratio",
+    "num__late_payments"
+  ],
+  "feature_importance": {
+    "num__late_payments": 0.19950622569455437,
+    "num__age": 0.06886782908945069,
+    "num__income": 0.03664911147806853,
+    "num__loan_amount": 0.028700018316056085,
+    "num__credit_history": 0.025304110867663692,
+    "num__debt_ratio": 0.018803663932298757
+  }
+}

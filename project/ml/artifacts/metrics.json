@@ -1,0 +1,15 @@
+{
+  "data_source": "give_me_credit",
+  "rows": 150000,
+  "baseline_logistic_regression": {
+    "roc_auc": 0.822683405791647,
+    "precision": 0.2420237870492732,
+    "recall": 0.6394014962593516
+  },
+  "advanced_random_forest": {
+    "roc_auc": 0.8395236947816207,
+    "precision": 0.237255918437878,
+    "recall": 0.6847880299251871
+  },
+  "selected_model": "advanced_random_forest"
+}

@@ -1,0 +1,21 @@
+[
+  {
+    "shape":[
+      2500,
+      7
+    ],
+    "missing_values":{
+      "income":71,
+      "loan_amount":83,
+      "age":0,
+      "credit_history":62,
+      "debt_ratio":86,
+      "late_payments":0,
+      "default":0
+    },
+    "target_distribution":{
+      "0":0.8504,
+      "1":0.1496
+    }
+  }
+]
