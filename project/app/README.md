@@ -13,7 +13,7 @@
 Рекомендуемая структура:
 
 - `api/` — роуты и зависимости API;
-- `core/` — конфигурация, логирование, decision rule;
+- `core/` — конфигурация, логирование, decision rule, бизнес-правила;
 - `models/` — pydantic-схемы и типы инференса;
 - `services/` — инференс и explainability;
 - `main.py` — точка входа FastAPI-приложения и middleware логирования.
@@ -36,7 +36,7 @@ curl http://127.0.0.1:8000/health
 - использовать type hints;
 - не хардкодить секреты и пороги (использовать `.env`);
 - логировать запросы и результаты предсказаний;
-- обрабатывать ошибки в едином формате ответа.
+- обрабатывать ошибки через `HTTPException` с понятным `detail`.
 
 Интерфейс пользователя реализуется отдельно в `project/frontend/` на React и обращается к этому API.
 
@@ -52,8 +52,9 @@ curl http://127.0.0.1:8000/health
 
 - `core/config.py` — настройки через `.env` (`THRESHOLD_APPROVE`, `THRESHOLD_REJECT`, пути артефактов).
 - `core/logging.py` — базовая конфигурация логов.
-- `core/decision.py` — правило `APPROVE / REVIEW / REJECT`.
+- `core/decision.py` — пороги PD → `APPROVE / REVIEW / REJECT`.
+- `core/business_rules.py` — авто-одобрение/отказ и штрафы к PD.
 - `api/routes/health.py` — `GET /health`.
 - `api/routes/predict.py` — `POST /predict` с обработкой ошибок.
-- `services/inference_service.py` — загрузка `model.joblib`, расчёт PD, решение.
+- `services/inference_service.py` — загрузка `model.joblib`, правила, ML, PD, решение.
 - `services/explanation_service.py` — SHAP + fallback по feature importance.

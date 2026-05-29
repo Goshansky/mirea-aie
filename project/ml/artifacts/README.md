@@ -19,4 +19,5 @@ Backend должен читать артефакты только из этой 
 - `metrics.json` — метрики сравнения моделей;
 - `feature_metadata.json` — имена признаков и importances;
 - `x_test_sample.npy` — пример трансформированных признаков для отладки;
-- `eda/` — графики и сводки EDA.
+- `eda/` — `summary.json`, `missing_values.csv`, png (в т.ч. из `notebooks/01_eda_give_me_credit.ipynb`);
+- `shap_summary.json` — при успешном расчёте SHAP при обучении (опционально).

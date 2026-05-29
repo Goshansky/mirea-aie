@@ -11,4 +11,4 @@
 Текущий контракт:
 
 - `GET /health` -> `{"status": "ok"}`;
-- `POST /predict` -> `{"decision": "...", "probability": 0.xxxx, "reasons": [...]}`.
+- `POST /predict` -> `{"decision": "APPROVE|REJECT|REVIEW", "probability": 0.xxxx, "reasons": ["...", ...]}` (1–3 причины).

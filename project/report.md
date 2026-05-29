@@ -50,7 +50,7 @@
 | Метрика | Зачем |
 |---------|--------|
 | **ROC-AUC** | Основная метрика ранжирования риска; устойчива к дисбалансу классов |
-| **Precision** | Доля верных «дефолтных» среди отклонённых (важно не отсеять слишком много хороших клиентов при жёстком пороге) |
+| **Precision** | Доля верно предсказанных дефолтов среди заявок, классифицированных моделью как дефолт (при пороге 0.5 на test) |
 | **Recall** | Доля пойманных дефолтов среди всех дефолтов |
 
 Дополнительно в сервисе используются **пороги PD** (`THRESHOLD_APPROVE=0.25`, `THRESHOLD_REJECT=0.55`) для зоны **REVIEW** — это бизнес-решение, а не метрика обучения.
@@ -103,17 +103,16 @@
 
 ### 3.4. EDA и наблюдения
 
-Разведочный анализ выполняется скриптом:
+Разведочный анализ:
 
-```bash
-python -m ml.training.eda --source give_me_credit
-```
+- **Ноутбук:** `notebooks/01_eda_give_me_credit.ipynb` (основной интерактивный отчёт);
+- **Скрипт:** `python -m ml.training.eda --source give_me_credit`.
 
-Результаты сохраняются в `ml/artifacts/eda/`:
+Артефакты в `ml/artifacts/eda/`:
 
-- `summary.json` — размер выборки, пропуски, доля классов;
-- `target_distribution.png` — распределение целевой переменной;
-- `debt_ratio_hist.png`, `correlation_heatmap.png`.
+- `summary.json`, `missing_values.csv` — сводка и пропуски;
+- `target_distribution.png`, `debt_ratio_hist.png`, `correlation_heatmap.png`;
+- `features_late_credit.png` — распределения просрочек и числа кредитных линий.
 
 **Основные выводы EDA (типично для Give Me Some Credit):**
 
@@ -121,8 +120,6 @@ python -m ml.training.eda --source give_me_credit
 - **Пропуски** в основном в `MonthlyIncome` — заполняются медианой.
 - **Просрочки и возраст** — наиболее информативные признаки (подтверждается feature importance финальной модели).
 - **Высокий DebtRatio и много открытых линий** коррелируют с повышенным риском.
-
-Интерактивный разбор: `notebooks/01_eda_give_me_credit.ipynb` (те же шаги, что в `ml/training/eda.py`).
 
 ---
 
@@ -143,7 +140,10 @@ python -m ml.training.eda --source give_me_credit
 ### 4.3. Дополнительные элементы
 
 - Признак **`loan_to_income`** добавлен в обучение и в post-ML бизнес-правила.
-- **Бизнес-правила** (`app/core/business_rules.py`): авто-одобрение «безопасных» заявок, авто-отказ при экстремальных комбинациях, штрафы к PD за возраст, кредитные линии, просрочки, долг.
+- **Бизнес-правила** (`app/core/business_rules.py`):
+  - авто-**APPROVE**: `loan_to_income` ≤3, `debt_ratio` ≤0.35, ≤1 просрочка, возраст 21–70, 1–20 кредитных линий;
+  - авто-**REJECT**: возраст >75, ≥50 кредитных линий, ≥3 просрочек, `loan_to_income` >24, доход <15k ₽;
+  - post-ML штрафы к PD за возраст, thin file (0 линий), перегруз линиями, просрочки, долг.
 - **Explainability:** SHAP `TreeExplainer` для Random Forest; fallback — взвешенный вклад по `feature_importance` из `feature_metadata.json`.
 
 ### 4.4. Нейросетевые модели
@@ -214,8 +214,8 @@ python -m ml.training.train --source give_me_credit
 flowchart LR
     UI[React UI] --> API[FastAPI /predict]
     API --> BR{Бизнес-правила}
-    BR -->|auto approve/reject| OUT[Ответ]
-    BR -->|иначе| ML[Random Forest]
+    BR -->|срабатывание| OUT[Ответ и причины]
+    BR -->|нет| ML[Random Forest]
     ML --> ADJ[Post-ML штрафы]
     ADJ --> TH[Пороги PD]
     TH --> EXP[SHAP / importance]
@@ -245,23 +245,23 @@ flowchart LR
 }
 ```
 
-**Ответ:**
+**Ответ** (`reasons` — от 1 до 3 строк):
 
 ```json
 {
   "decision": "APPROVE",
   "probability": 0.22,
-  "reasons": ["...", "...", "..."]
+  "reasons": ["кредит составляет 0.42 от месячного дохода — низкая нагрузка", "нет просрочек"]
 }
 ```
 
 **Логика решения:**
 
-- PD &lt; 0.25 → **APPROVE**
-- PD &gt; 0.55 → **REJECT**
-- иначе → **REVIEW**
+1. Срабатывают **бизнес-правила** → ответ сразу (ML и SHAP не вызываются).
+2. Иначе **ML** → PD, post-ML штрафы → пороги: PD < 0.25 **APPROVE**, PD > 0.55 **REJECT**, иначе **REVIEW**.
+3. Объяснение: SHAP / feature importance на ML-пути; при правилах — готовые формулировки из кода.
 
-Пороги и штрафы настраиваются через `.env` (см. `.env.example`).
+Пороги и штрафы — `.env.example`, `app/core/config.py`.
 
 ### 6.3. Технологический стек
 
@@ -270,7 +270,7 @@ flowchart LR
 | Backend | Python 3.10+, FastAPI, Pydantic, scikit-learn 1.7.2, SHAP, joblib |
 | Frontend | React, TypeScript, Vite |
 | ML | pandas, sklearn Pipeline, RandomForest, LogisticRegression |
-| Тесты | pytest, httpx (TestClient) |
+| Тесты | pytest (22 теста), FastAPI TestClient |
 | Deploy | Docker Compose (API :8000, UI :8080) |
 
 **Запуск:** см. [`README.md`](README.md) (разделы 3–4, Docker Compose).
@@ -317,8 +317,7 @@ docker compose up --build
 - `loan_amount` в обучающей выборке — **оценка** из DebtRatio × Income, а не фактическая сумма заявки из банка.
 - Нет хранения истории заявок, аутентификации и rate limiting.
 - Explainability — SHAP на одной строке; для высокой нагрузки нужен кэш/батч.
-- Отдельная оценка на `cs-testing.csv` (hold-out Kaggle) не проводилась.
-- Отдельная оценка на `cs-testing.csv` не проводилась.
+- Отдельная оценка на `cs-testing.csv` (официальный hold-out Kaggle) не проводилась — метрики только на 20% split из `cs-training.csv`.
 
 **Планы развития:**
 
@@ -347,7 +346,7 @@ docker compose up --build
 
 | # | Ввод (суть) | Ожидаемый результат |
 |---|-------------|---------------------|
-| 1 | Доход 1.2M ₽, кредит 10k ₽, возраст 35, 5–7 линий, 0 просрочек | **APPROVE**, низкая PD, причины про низкую нагрузку |
+| 1 | Доход 1.2M ₽, кредит 10k ₽, возраст 35, credit_history 5–7, 0 просрочек | **APPROVE**, низкая PD (часто бизнес-правила) |
 | 2 | Те же поля, возраст **100** | **REJECT** — возраст выше лимита |
 | 3 | `credit_history` **50** | **REJECT** — слишком много линий |
 | 4 | Доход 120k ₽, кредит **5M** ₽ | **REJECT** — нереалистичная нагрузка к доходу |

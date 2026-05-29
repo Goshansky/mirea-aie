@@ -25,13 +25,13 @@
 ```bash
 cd project
 
-# 1. Положить cs-training.csv в ml/data/raw/ (или --download)
+# CSV уже в ml/data/raw/ после git clone; при отсутствии файлов:
 python -m ml.data.download_data
 
-# 2. Обучение на Give Me Some Credit
+# Обучение на Give Me Some Credit (перезапишет ml/artifacts/)
 python -m ml.training.train --source give_me_credit
 
-# 3. EDA
+# EDA (скрипт или notebooks/01_eda_give_me_credit.ipynb)
 python -m ml.training.eda --source give_me_credit
 
 # Быстрый прогон на подвыборке

@@ -27,7 +27,7 @@ project/
 │   └── artifacts/       # model.joblib, metrics.json, feature_metadata.json
 ├── frontend/            # React + TypeScript (форма и результат)
 ├── tests/               # pytest (API, бизнес-правила, датасет)
-├── notebooks/           # экспериментальные ноутбуки (EDA)
+├── notebooks/           # 01_eda_give_me_credit.ipynb
 ├── docker-compose.yml
 ├── Dockerfile.api
 ├── Dockerfile.frontend
@@ -91,7 +91,7 @@ copy .env.example .env
 | `ml/artifacts/model.joblib` | финальная модель для API (Random Forest) |
 | `ml/artifacts/model_baseline.joblib`, `model_advanced.joblib` | baseline и production-пайплайны |
 | `ml/artifacts/metrics.json`, `feature_metadata.json` | метрики и метаданные признаков |
-| `ml/artifacts/eda/` | графики EDA (если сгенерированы) |
+| `ml/artifacts/eda/` | графики и сводка EDA (`summary.json`, png) |
 
 **Источник данных:** [Kaggle — Give Me Some Credit](https://www.kaggle.com/c/GiveMeSomeCredit/data).
 
@@ -160,13 +160,13 @@ curl -X POST http://localhost:8000/predict \
   -d '{"income":120000,"loan_amount":50000,"age":35,"credit_history":7,"debt_ratio":0.31,"late_payments":0}'
 ```
 
-**Ответ:**
+**Ответ** (поля `reasons` — от 1 до 3 строк на русском):
 
 ```json
 {
   "decision": "APPROVE",
   "probability": 0.22,
-  "reasons": ["...", "...", "..."]
+  "reasons": ["кредит составляет 0.42 от месячного дохода — низкая нагрузка", "нет просрочек"]
 }
 ```
 
@@ -226,13 +226,13 @@ docker compose up --build
 
 **Логика решения:**
 
-1. **Бизнес-правила (авто-одобрение / авто-отказ)** — до вызова ML.  
-2. **ML** — `RandomForest` + признак `loan_to_income`.  
-3. **Post-ML штрафы** — возраст, кредитные линии, просрочки, кредит к доходу, долг.  
-4. **Пороги** — `THRESHOLD_APPROVE=0.25`, `THRESHOLD_REJECT=0.55`.  
-5. **Объяснение** — SHAP (или fallback по feature importance), причины на русском.
+1. **Бизнес-правила** — до ML: авто-**APPROVE** (низкая нагрузка, возраст 21–70, 1–20 кредитных линий, ≤1 просрочка) или авто-**REJECT** (возраст >75, ≥50 линий, ≥3 просрочек, кредит >24× дохода и др.).  
+2. **ML** — `RandomForest` на 7 признаках (включая `loan_to_income`).  
+3. **Post-ML штрафы** — корректировка PD за возраст, кредитные линии, просрочки, кредит к доходу, долг.  
+4. **Пороги PD** — <0.25 → APPROVE; >0.55 → REJECT; иначе REVIEW.  
+5. **Объяснение** — на ML-пути: SHAP или fallback по feature importance; при срабатывании правил — текстовые причины из `business_rules.py`.
 
-Пороги и штрафы настраиваются в `.env` (см. `.env.example`).
+Пороги и штрафы — в `.env.example` / `app/core/config.py`.
 
 ---
 
@@ -275,7 +275,7 @@ cd project
 pytest tests -v
 ```
 
-Покрытие: `/health`, `/predict`, маппинг Give Me Some Credit, бизнес-правила.
+Покрытие (22 теста): `/health`, `/predict` (ML, auto-approve, hard reject), маппинг Give Me Some Credit, бизнес-правила.
 
 ---
 
@@ -285,7 +285,7 @@ pytest tests -v
 
 **Сценарии в UI:**
 
-1. **Одобрение** — доход 1 200 000 ₽, кредит 10 000 ₽, возраст 35, 5–7 линий, debt 0, 0 просрочек → APPROVE, низкая PD.  
+1. **Одобрение** — доход 1 200 000 ₽, кредит 10 000 ₽, возраст 35, **credit_history 5–7**, debt 0, 0 просрочек → APPROVE (часто через бизнес-правила), низкая PD.  
 2. **Отказ по возрасту** — те же поля, возраст **100** → REJECT (возраст > 75).  
 3. **Отказ по кредитным линиям** — `credit_history` **50** → REJECT.  
 4. **Отказ по кредиту** — доход 120 000 ₽, кредит **5 000 000** ₽ → REJECT (нагрузка к доходу).  
@@ -304,9 +304,9 @@ pytest tests -v
 - Нет персистентного хранения заявок и авторизации.
 - `loan_amount` в датасете — оценка из DebtRatio × Income, не фактическая сумма из банка.
 - Explainability — SHAP на одной строке; для production нужен batch/кэш.
-- Нет отдельной оценки на `cs-testing.csv` (можно добавить `ml.training.evaluate`).
+- Нет отдельной оценки на `cs-testing.csv` (файл в `ml/data/raw/`, метрики только на hold-out 20% из train).
 
-Возможные улучшения: CatBoost/LightGBM, калибровка PD, MLflow, мониторинг дрейфа, A/B порогов.
+Возможные улучшения: CatBoost/LightGBM, калибровка PD, MLflow, мониторинг дрейфа.
 
 ---
 
@@ -323,4 +323,4 @@ pytest tests -v
 
 ## 12. Оценка проекта (кратко)
 
-Итоговая оценка — по [`project-evaluation.md`](project-evaluation.md) и чеклисту [`self-checklist.md`](self-checklist.md): минимум — рабочий сервис с реальной моделью; для оценки **4–5** нужны EDA, сравнение моделей в отчёте и воспроизводимый запуск по этому README.
+Итоговая оценка — по [`project-evaluation.md`](project-evaluation.md) и заполненному [`self-checklist.md`](self-checklist.md) (самооценка 10/10). Критерии: рабочий сервис, EDA, сравнение моделей, документация, Docker.

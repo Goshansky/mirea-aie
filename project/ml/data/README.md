@@ -14,6 +14,7 @@
 | `give_me_credit.py` | Чтение и маппинг Kaggle Give Me Some Credit |
 | `download_data.py` | Проверка/скачивание `cs-training.csv` |
 | `preprocessing.py` | `ColumnTransformer` для обучения и инференса |
+| `features.py` | признак `loan_to_income` для train и API |
 
 ## Give Me Some Credit
 

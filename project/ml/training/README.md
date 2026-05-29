@@ -27,6 +27,6 @@
 
 ```bash
 cd project
-python -m ml.training.train
-python -m ml.training.eda
+python -m ml.training.train --source give_me_credit
+python -m ml.training.eda --source give_me_credit
 ```

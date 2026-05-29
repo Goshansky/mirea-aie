@@ -6,7 +6,7 @@
 
 - форма: `income`, `loan_amount`, `age`, `credit_history`, `debt_ratio`, `late_payments`;
 - кнопка «Оценить» → `POST /predict`;
-- вывод: решение (`APPROVE` / `REJECT` / `REVIEW`), вероятность дефолта, топ причин.
+- вывод: решение (`APPROVE` / `REJECT` / `REVIEW`), вероятность дефолта, 1–3 причины на русском.
 
 ## Структура
 
@@ -41,14 +41,17 @@ npm run dev
 
 В режиме dev запросы идут через proxy Vite: `/api/*` → `http://127.0.0.1:8000/*`.
 
-## Production-сборка
+## Production / Docker
+
+В `docker compose` nginx на `:8080` проксирует `/api` → backend `:8000` — отдельный `VITE_API_URL` не нужен.
+
+Локальная сборка:
 
 ```bash
 npm run build
-npm run preview
 ```
 
-Для production задайте прямой URL API в `.env`:
+Прямой URL API (без proxy Vite) — в `frontend/.env.example`:
 
 ```env
 VITE_API_URL=http://127.0.0.1:8000
