@@ -122,7 +122,7 @@ python -m ml.training.eda --source give_me_credit
 - **Просрочки и возраст** — наиболее информативные признаки (подтверждается feature importance финальной модели).
 - **Высокий DebtRatio и много открытых линий** коррелируют с повышенным риском.
 
-Дополнительно планируется ноутбук `notebooks/01_eda_give_me_credit.ipynb` с теми же шагами в интерактивном виде.
+Интерактивный разбор: `notebooks/01_eda_give_me_credit.ipynb` (те же шаги, что в `ml/training/eda.py`).
 
 ---
 
@@ -318,7 +318,7 @@ docker compose up --build
 - Нет хранения истории заявок, аутентификации и rate limiting.
 - Explainability — SHAP на одной строке; для высокой нагрузки нужен кэш/батч.
 - Отдельная оценка на `cs-testing.csv` (hold-out Kaggle) не проводилась.
-- EDA в Jupyter-ноутбуке оформляется дополнительно (есть скрипт `ml/training/eda.py`).
+- Отдельная оценка на `cs-testing.csv` не проводилась.
 
 **Планы развития:**
 

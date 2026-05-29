@@ -127,11 +127,10 @@ python -m ml.training.train --source mock
 | `metrics.json` | сравнение метрик baseline vs advanced |
 | `feature_metadata.json` | признаки и importance |
 
-Краткий EDA (графики в `ml/artifacts/eda/`):
+EDA:
 
-```bash
-python -m ml.training.eda --source give_me_credit
-```
+- **Ноутбук:** `notebooks/01_eda_give_me_credit.ipynb` (интерактивный разбор)
+- **Скрипт:** `python -m ml.training.eda --source give_me_credit` (те же графики в `ml/artifacts/eda/`)
 
 ### 4.3. Запуск API (локально)
 
@@ -306,7 +305,6 @@ pytest tests -v
 - `loan_amount` в датасете — оценка из DebtRatio × Income, не фактическая сумма из банка.
 - Explainability — SHAP на одной строке; для production нужен batch/кэш.
 - Нет отдельной оценки на `cs-testing.csv` (можно добавить `ml.training.evaluate`).
-- EDA в ноутбуке `notebooks/` — в процессе оформления (есть скрипт `ml/training/eda.py`).
 
 Возможные улучшения: CatBoost/LightGBM, калибровка PD, MLflow, мониторинг дрейфа, A/B порогов.
 
