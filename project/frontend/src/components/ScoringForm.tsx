@@ -51,12 +51,19 @@ export default function ScoringForm({ onSubmit, loading }: ScoringFormProps) {
       </label>
 
       <label>
-        Стаж кредитной истории (лет)
-        <input name="credit_history" type="number" min="0" max="80" defaultValue={INITIAL.credit_history} required />
+        Количество открытых кредитных линий
+        <input
+          name="credit_history"
+          type="number"
+          min="0"
+          max="80"
+          defaultValue={INITIAL.credit_history}
+          required
+        />
       </label>
 
       <label>
-        Debt ratio (0–1)
+        Долговая нагрузка (0–1)
         <input
           name="debt_ratio"
           type="number"
@@ -69,7 +76,7 @@ export default function ScoringForm({ onSubmit, loading }: ScoringFormProps) {
       </label>
 
       <label>
-        Просрочки
+        Количество просрочек
         <input name="late_payments" type="number" min="0" max="50" defaultValue={INITIAL.late_payments} />
       </label>
 

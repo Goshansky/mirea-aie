@@ -9,11 +9,17 @@ from pathlib import Path
 import joblib
 import pandas as pd
 
+from app.core.business_rules import (
+    adjust_probability_for_risk_factors,
+    apply_favorable_rules,
+    apply_hard_rules,
+)
 from app.core.config import Settings
 from app.core.decision import resolve_decision
 from app.models.predictor import LoadedArtifacts
 from app.models.schemas import PredictRequest, PredictResponse
 from app.services.explanation_service import explain_with_importance, explain_with_shap
+from ml.data.features import enrich_application_features
 
 logger = logging.getLogger(__name__)
 
@@ -63,10 +69,41 @@ class InferenceService:
 
     def predict(self, payload: PredictRequest) -> PredictResponse:
         """Выполняет скоринг заявки и формирует ответ."""
-        request_df = pd.DataFrame([payload.model_dump()])
+        favorable_rule = apply_favorable_rules(payload, self.settings)
+        if favorable_rule.triggered and favorable_rule.decision is not None:
+            logger.info(
+                "favorable_rule_approve probability=%.4f reasons=%s",
+                favorable_rule.probability,
+                favorable_rule.reasons,
+            )
+            return PredictResponse(
+                decision=favorable_rule.decision.value,
+                probability=round(float(favorable_rule.probability), 4),
+                reasons=list(favorable_rule.reasons),
+            )
+
+        hard_rule = apply_hard_rules(payload, self.settings)
+        if hard_rule.triggered and hard_rule.decision is not None:
+            logger.info(
+                "hard_rule_reject probability=%.4f reasons=%s",
+                hard_rule.probability,
+                hard_rule.reasons,
+            )
+            return PredictResponse(
+                decision=hard_rule.decision.value,
+                probability=round(float(hard_rule.probability), 4),
+                reasons=list(hard_rule.reasons),
+            )
+
+        request_df = enrich_application_features(pd.DataFrame([payload.model_dump()]))
 
         pipeline = self.artifacts.pipeline
-        pd_probability = float(pipeline.predict_proba(request_df)[0][1])
+        ml_probability = float(pipeline.predict_proba(request_df)[0][1])
+        pd_probability, risk_adjustments = adjust_probability_for_risk_factors(
+            ml_probability,
+            payload,
+            self.settings,
+        )
         decision = resolve_decision(
             pd_probability=pd_probability,
             threshold_approve=self.settings.threshold_approve,
@@ -79,11 +116,14 @@ class InferenceService:
         if hasattr(transformed_row, "toarray"):
             transformed_row = transformed_row.toarray()
 
+        raw_values = payload.model_dump()
+
         reasons = explain_with_shap(
             model=model,
             transformed_row=transformed_row,
             feature_names=self.artifacts.feature_names,
             top_k=3,
+            raw_values=raw_values,
         )
         if not reasons:
             reasons = explain_with_importance(
@@ -91,9 +131,19 @@ class InferenceService:
                 feature_names=self.artifacts.feature_names,
                 feature_importance=self.artifacts.feature_importance,
                 top_k=3,
+                raw_values=raw_values,
             )
 
-        logger.info("prediction_result decision=%s probability=%.4f", decision, pd_probability)
+        reasons = risk_adjustments + reasons
+        reasons = reasons[:3]
+
+        logger.info(
+            "prediction_result decision=%s ml_pd=%.4f adjusted_pd=%.4f lates=%d",
+            decision,
+            ml_probability,
+            pd_probability,
+            payload.late_payments,
+        )
 
         return PredictResponse(
             decision=decision,

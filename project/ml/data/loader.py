@@ -64,7 +64,9 @@ def _generate_mock_dataset(n_samples: int = 2500, random_state: int = 42) -> pd.
         mask = rng.random(n_samples) < missing_fraction
         df.loc[mask, column] = np.nan
 
-    return df
+    from ml.data.features import enrich_application_features
+
+    return enrich_application_features(df)
 
 
 def _load_from_csv(path: Path) -> tuple[pd.DataFrame, str]:

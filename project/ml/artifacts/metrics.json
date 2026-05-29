@@ -2,14 +2,14 @@
   "data_source": "give_me_credit",
   "rows": 150000,
   "baseline_logistic_regression": {
-    "roc_auc": 0.822683405791647,
-    "precision": 0.2420237870492732,
-    "recall": 0.6394014962593516
+    "roc_auc": 0.8232333614971323,
+    "precision": 0.24291650925576125,
+    "recall": 0.6413965087281795
   },
   "advanced_random_forest": {
-    "roc_auc": 0.8395236947816207,
-    "precision": 0.237255918437878,
-    "recall": 0.6847880299251871
+    "roc_auc": 0.8397842863817417,
+    "precision": 0.23286512100186157,
+    "recall": 0.686284289276808
   },
   "selected_model": "advanced_random_forest"
 }

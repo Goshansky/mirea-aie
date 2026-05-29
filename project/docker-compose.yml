@@ -12,8 +12,24 @@ services:
       ARTIFACTS_DIR: ml/artifacts
       MODEL_FILE: model.joblib
       FEATURE_METADATA_FILE: feature_metadata.json
-      THRESHOLD_APPROVE: "0.35"
-      THRESHOLD_REJECT: "0.65"
+      THRESHOLD_APPROVE: "0.25"
+      THRESHOLD_REJECT: "0.55"
+      MIN_INCOME: "15000"
+      MAX_LOAN_TO_INCOME: "24"
+      AUTO_APPROVE_MAX_LOAN_TO_INCOME: "3"
+      AUTO_APPROVE_MAX_DEBT_RATIO: "0.35"
+      AUTO_APPROVE_MAX_LATE_PAYMENTS: "1"
+      AUTO_APPROVE_MIN_AGE: "21"
+      AUTO_APPROVE_MAX_AGE: "70"
+      AGE_REJECT_MIN: "18"
+      AGE_REJECT_MAX: "75"
+      AGE_PENALTY_YOUNG_THRESHOLD: "23"
+      AGE_PENALTY_OLD_THRESHOLD: "65"
+      AGE_PENALTY_RATE: "0.012"
+      AGE_PENALTY_CAP: "0.40"
+      LATE_PAYMENTS_REJECT: "3"
+      LATE_PAYMENT_PENALTY: "0.06"
+      LATE_PAYMENT_PENALTY_CAP: "0.30"
     volumes:
       # Подхватывает локально обученную модель (Give Me Some Credit)
       - ./ml/artifacts:/app/ml/artifacts

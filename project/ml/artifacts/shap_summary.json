@@ -5,14 +5,16 @@
     "num__age",
     "num__credit_history",
     "num__debt_ratio",
-    "num__late_payments"
+    "num__late_payments",
+    "num__loan_to_income"
   ],
   "feature_importance": {
-    "num__late_payments": 0.19950622569455437,
-    "num__age": 0.06886782908945069,
-    "num__income": 0.03664911147806853,
-    "num__loan_amount": 0.028700018316056085,
-    "num__credit_history": 0.025304110867663692,
-    "num__debt_ratio": 0.018803663932298757
+    "num__late_payments": 0.19181461310687137,
+    "num__age": 0.06662174758462021,
+    "num__loan_to_income": 0.029617271739885022,
+    "num__income": 0.028065232769160953,
+    "num__credit_history": 0.022900403321486944,
+    "num__loan_amount": 0.017244188289451023,
+    "num__debt_ratio": 0.013934194398490184
   }
 }

@@ -17,8 +17,13 @@ class PredictRequest(BaseModel):
     income: float = Field(..., ge=0, description="Ежемесячный доход клиента")
     loan_amount: float = Field(..., ge=0, description="Сумма кредита")
     age: int = Field(..., ge=18, le=100, description="Возраст клиента")
-    credit_history: int = Field(..., ge=0, le=80, description="Стаж кредитной истории в годах")
-    debt_ratio: float = Field(..., ge=0, le=1, description="Отношение долга к доходу")
+    credit_history: int = Field(
+        ...,
+        ge=0,
+        le=80,
+        description="Число открытых кредитных линий (прокси кредитной истории)",
+    )
+    debt_ratio: float = Field(..., ge=0, le=1, description="Долговая нагрузка (доля долга к доходу, 0–1)")
     late_payments: int = Field(default=0, ge=0, le=50, description="Количество просрочек")
 
 

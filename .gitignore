@@ -55,3 +55,10 @@ logs/
 *.tmp
 *.bak
 *.old
+
+
+# Frontend (Node.js)
+project/frontend/node_modules/
+project/frontend/dist/
+/homeworks/HW13/artifacts/trainer_output/checkpoint-3000/tokenizer_config.json
+/homeworks/

@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 
 from ml.data.constants import TARGET_COLUMN
+from ml.data.features import enrich_application_features
 
 # Официальные имена колонок соревнования Kaggle «Give Me Some Credit».
 COL_TARGET: Final[str] = "SeriousDlqin2yrs"
@@ -117,6 +118,7 @@ def transform_give_me_credit(df: pd.DataFrame) -> pd.DataFrame:
 
     unified = unified.dropna(subset=[TARGET_COLUMN])
     unified[TARGET_COLUMN] = unified[TARGET_COLUMN].astype(int)
+    unified = enrich_application_features(unified)
     return unified.reset_index(drop=True)
 
 

@@ -1,0 +1,28 @@
+# Python
+**/__pycache__
+**/.pytest_cache
+**/*.pyc
+.venv
+venv
+
+# Node
+frontend/node_modules
+frontend/dist
+
+# Большие данные (модель монтируется с хоста или обучается в entrypoint)
+ml/data/raw/*.csv
+ml/data/raw/*.xls
+
+# Прочее
+.git
+.idea
+*.md
+!README.md
+notebooks
+homeworks
+examples-topics.md
+faq.md
+overview.md
+project-evaluation.md
+report.md
+self-checklist.md
