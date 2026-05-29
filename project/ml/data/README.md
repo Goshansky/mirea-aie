@@ -18,7 +18,7 @@
 ## Give Me Some Credit
 
 **Источник:** [Kaggle — Give Me Some Credit](https://www.kaggle.com/c/GiveMeSomeCredit/data)  
-**Файл:** `raw/cs-training.csv` (не коммитится в git)
+**Файлы:** `raw/cs-training.csv`, `raw/cs-testing.csv` (в репозитории)
 
 ### Маппинг признаков → API
 
