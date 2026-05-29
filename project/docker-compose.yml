@@ -1,0 +1,35 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8000:8000"
+    environment:
+      APP_NAME: Credit Scoring API
+      APP_ENV: docker
+      APP_LOG_LEVEL: INFO
+      ARTIFACTS_DIR: ml/artifacts
+      MODEL_FILE: model.joblib
+      FEATURE_METADATA_FILE: feature_metadata.json
+      THRESHOLD_APPROVE: "0.35"
+      THRESHOLD_REJECT: "0.65"
+    volumes:
+      # Подхватывает локально обученную модель (Give Me Some Credit)
+      - ./ml/artifacts:/app/ml/artifacts
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
