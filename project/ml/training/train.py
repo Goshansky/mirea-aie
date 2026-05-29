@@ -12,7 +12,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
-from ml.data.loader import TARGET_COLUMN, load_dataset
+from ml.data.constants import TARGET_COLUMN
+from ml.data.loader import load_dataset
 from ml.data.preprocessing import build_preprocessor, infer_feature_config
 from ml.training.evaluate import calculate_metrics, save_metrics
 from ml.training.explain import (
@@ -30,7 +31,20 @@ def parse_args() -> argparse.Namespace:
         "--data-path",
         type=str,
         default="",
-        help="Путь к CSV датасету. Если не указан, генерируется mock.",
+        help="Путь к CSV (Give Me Some Credit или унифицированный формат).",
+    )
+    parser.add_argument(
+        "--source",
+        type=str,
+        choices=["auto", "mock", "give_me_credit", "csv"],
+        default="auto",
+        help="Источник данных: auto | mock | give_me_credit | csv.",
+    )
+    parser.add_argument(
+        "--max-rows",
+        type=int,
+        default=0,
+        help="Ограничить число строк (0 = без ограничения). Удобно для быстрых прогонов.",
     )
     parser.add_argument(
         "--artifacts-dir",
@@ -87,7 +101,14 @@ def main() -> None:
     artifacts_dir.mkdir(parents=True, exist_ok=True)
 
     dataset_path = Path(args.data_path) if args.data_path else None
-    df = load_dataset(dataset_path=dataset_path, random_state=args.random_state)
+    max_rows = args.max_rows if args.max_rows > 0 else None
+    df, data_source = load_dataset(
+        dataset_path=dataset_path,
+        random_state=args.random_state,
+        source=args.source,  # type: ignore[arg-type]
+        max_rows=max_rows,
+    )
+    print(f"Источник данных: {data_source}, строк: {len(df)}")
 
     feature_config = infer_feature_config(df)
     preprocessor = build_preprocessor(feature_config)
@@ -114,6 +135,8 @@ def main() -> None:
     advanced_metrics = calculate_metrics(y_test, advanced_proba)
 
     metrics_payload = {
+        "data_source": data_source,
+        "rows": len(df),
         "baseline_logistic_regression": baseline_metrics,
         "advanced_random_forest": advanced_metrics,
         "selected_model": "advanced_random_forest",

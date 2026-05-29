@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-from ml.data.loader import TARGET_COLUMN, load_dataset
+from ml.data.constants import TARGET_COLUMN
+from ml.data.loader import load_dataset
 
 
 def parse_args() -> argparse.Namespace:
@@ -19,7 +20,14 @@ def parse_args() -> argparse.Namespace:
         "--data-path",
         type=str,
         default="",
-        help="Путь к CSV датасету. Если не указан, генерируется mock.",
+        help="Путь к CSV (Give Me Some Credit или унифицированный формат).",
+    )
+    parser.add_argument(
+        "--source",
+        type=str,
+        choices=["auto", "mock", "give_me_credit", "csv"],
+        default="auto",
+        help="Источник данных: auto | mock | give_me_credit | csv.",
     )
     parser.add_argument(
         "--output-dir",
@@ -38,9 +46,15 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     dataset_path = Path(args.data_path) if args.data_path else None
-    df = load_dataset(dataset_path=dataset_path, random_state=args.random_state)
+    df, data_source = load_dataset(
+        dataset_path=dataset_path,
+        random_state=args.random_state,
+        source=args.source,  # type: ignore[arg-type]
+    )
+    print(f"Источник данных: {data_source}, строк: {len(df)}")
 
     summary = {
+        "data_source": data_source,
         "shape": [int(df.shape[0]), int(df.shape[1])],
         "missing_values": df.isna().sum().to_dict(),
         "target_distribution": df[TARGET_COLUMN].value_counts(normalize=True).to_dict(),

@@ -72,11 +72,15 @@ def calculate_shap_summary(
         return {}
 
     if isinstance(shap_values, list):
-        values = shap_values[1] if len(shap_values) > 1 else shap_values[0]
+        values = np.asarray(shap_values[1] if len(shap_values) > 1 else shap_values[0])
     else:
-        values = shap_values
+        values = np.asarray(shap_values)
+
+    if values.ndim == 3:
+        values = values[:, :, 1] if values.shape[-1] > 1 else values[:, :, 0]
 
     mean_abs = np.abs(values).mean(axis=0)
+    mean_abs = np.asarray(mean_abs).reshape(-1)
     if len(mean_abs) != len(feature_names):
         return {}
 

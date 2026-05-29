@@ -11,7 +11,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from ml.data.loader import TARGET_COLUMN
+from ml.data.constants import TARGET_COLUMN
 
 
 @dataclass(frozen=True)
