@@ -1,8 +1,9 @@
 feature,missing_count
-income,71
-loan_amount,83
+income,0
+loan_amount,0
 age,0
-credit_history,62
-debt_ratio,86
+credit_history,0
+debt_ratio,0
 late_payments,0
 default,0
+loan_to_income,0

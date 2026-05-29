@@ -1,21 +1,22 @@
-[
-  {
-    "shape":[
-      2500,
-      7
-    ],
-    "missing_values":{
-      "income":71,
-      "loan_amount":83,
-      "age":0,
-      "credit_history":62,
-      "debt_ratio":86,
-      "late_payments":0,
-      "default":0
-    },
-    "target_distribution":{
-      "0":0.8504,
-      "1":0.1496
-    }
+{
+  "data_source": "give_me_credit",
+  "shape": [
+    150000,
+    9
+  ],
+  "missing_values": {
+    "income": 0,
+    "loan_amount": 0,
+    "age": 0,
+    "credit_history": 0,
+    "debt_ratio": 0,
+    "late_payments": 0,
+    "default": 0,
+    "loan_to_income": 0,
+    "has_late": 0
+  },
+  "target_distribution": {
+    "0": 0.93316,
+    "1": 0.06684
   }
-]
+}
